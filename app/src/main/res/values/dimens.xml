@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="fab_margin">16dp</dimen>
+    <dimen name="main_content_padding">16dp</dimen>
+    <dimen name="edit_text_size">16sp</dimen>
+    <dimen name="add_screen_til_marginTop">5dp</dimen>
+    <dimen name="add_screen_iv_size">200dp</dimen>
+    <dimen name="add_screen_iv_marginTop">15dp</dimen>
+    <dimen name="add_screen_iv_padding">2dp</dimen>
+    <dimen name="add_screen_text_addImage_marginTop">96dp</dimen>
+    <dimen name="add_screen_text_addImage_textSize">18sp</dimen>
+    <dimen name="add_screen_text_addImage_padding">10dp</dimen>
+    <dimen name="add_screen_btnSave_marginTop">24dp</dimen>
+    <dimen name="btn_textSize">18sp</dimen>
+</resources>
