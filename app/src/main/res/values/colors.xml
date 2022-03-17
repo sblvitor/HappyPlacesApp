@@ -18,4 +18,7 @@
     <color name="primaryTextColor">#212121</color>
     <color name="secondaryTextColor">#9AA2AF</color>
 
+    <color name="circular_image_border">#757575</color>
+    <color name="item_happy_place_description_text_color">#606060</color>
+
 </resources>

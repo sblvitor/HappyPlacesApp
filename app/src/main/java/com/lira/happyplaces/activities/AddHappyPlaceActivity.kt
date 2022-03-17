@@ -1,4 +1,4 @@
-package com.lira.happyplaces
+package com.lira.happyplaces.activities
 
 import android.Manifest
 import android.app.AlertDialog
@@ -8,9 +8,7 @@ import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
 import android.graphics.Bitmap
-import android.media.Image
 import android.net.Uri
-import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.MediaStore
@@ -20,12 +18,18 @@ import android.view.View
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.lifecycle.lifecycleScope
 import com.karumi.dexter.Dexter
 import com.karumi.dexter.MultiplePermissionsReport
 import com.karumi.dexter.PermissionToken
 import com.karumi.dexter.listener.PermissionRequest
 import com.karumi.dexter.listener.multi.MultiplePermissionsListener
+import com.lira.happyplaces.R
+import com.lira.happyplaces.database.HappyPlaceDao
+import com.lira.happyplaces.database.HappyPlaceEntity
+import com.lira.happyplaces.database.HappyPlacesApp
 import com.lira.happyplaces.databinding.ActivityAddHappyPlaceBinding
+import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -40,12 +44,16 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
     private var cal = Calendar.getInstance()
     private lateinit var dateSetListener: DatePickerDialog.OnDateSetListener
 
+    private var saveImageToInternalStorage: Uri? = null
+    private var mLatitude: Double = 0.0
+    private var mLongitude: Double = 0.0
+
     private val openGalleryLauncher: ActivityResultLauncher<Intent> = registerForActivityResult(ActivityResultContracts.StartActivityForResult()){
         result ->
         if(result.resultCode == RESULT_OK && result.data != null){
             try {
                 val selectedImageBitmap = MediaStore.Images.Media.getBitmap(this.contentResolver, result.data?.data)
-                val saveImageToInternalStorage = saveImageToInternalStorage(selectedImageBitmap)
+                saveImageToInternalStorage = saveImageToInternalStorage(selectedImageBitmap)
                 Log.e("Saved image: ", "Path :: $saveImageToInternalStorage")
                 binding?.ivPlaceImage?.setImageBitmap(selectedImageBitmap)
             }catch (e: IOException){
@@ -59,7 +67,7 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
         result ->
         if(result.resultCode == RESULT_OK && result.data != null){
             val thumbnail: Bitmap = result.data!!.extras!!.get("data") as Bitmap
-            val saveImageToInternalStorage = saveImageToInternalStorage(thumbnail)
+            saveImageToInternalStorage = saveImageToInternalStorage(thumbnail)
             Log.e("Saved image: ", "Path :: $saveImageToInternalStorage")
             binding?.ivPlaceImage?.setImageBitmap(thumbnail)
         }
@@ -86,10 +94,18 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
             cal.set(Calendar.DAY_OF_MONTH, dayOfMonth)
             updateDateInView()
         }
+        updateDateInView()
         binding?.etDate?.setOnClickListener(this)
 
         // Button add image
         binding?.tvAddImage?.setOnClickListener(this)
+
+        val happyPlaceDao = (application as HappyPlacesApp).db.happyPlaceDao()
+
+        // Button SAVE
+        binding?.btnSave?.setOnClickListener{
+            addHappyPlace(happyPlaceDao)
+        }
 
     }
 
@@ -180,6 +196,24 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
             e.printStackTrace()
         }
         return Uri.parse(file.absolutePath)
+    }
+
+    private fun addHappyPlace(happyPlaceDao: HappyPlaceDao){
+        val title = binding?.etTitle?.text.toString()
+        val description = binding?.etDescription?.text.toString()
+        val location = binding?.etLocation?.text.toString()
+        val date = binding?.etDate?.text.toString()
+
+        if(title.isNotEmpty() && description.isNotEmpty() && location.isNotEmpty() && saveImageToInternalStorage != null){
+            lifecycleScope.launch {
+                happyPlaceDao.insert(HappyPlaceEntity(title=title, description=description, location=location, image=saveImageToInternalStorage.toString(), date=date,
+                    latitude=mLatitude, longitude=mLongitude))
+                Toast.makeText(applicationContext, "Record saved", Toast.LENGTH_SHORT).show()
+                finish()
+            }
+        }else{
+            Toast.makeText(applicationContext, "Please, fill all the empty spaces", Toast.LENGTH_SHORT).show()
+        }
     }
 
     override fun onDestroy() {
