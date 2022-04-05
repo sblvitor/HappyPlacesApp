@@ -37,7 +37,7 @@ import java.io.OutputStream
 import java.text.SimpleDateFormat
 import java.util.*
 
-class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
+open class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
 
     private var binding: ActivityAddHappyPlaceBinding? = null
 
@@ -47,6 +47,8 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
     private var saveImageToInternalStorage: Uri? = null
     private var mLatitude: Double = 0.0
     private var mLongitude: Double = 0.0
+
+    private var mHappyPlaceUpdate: HappyPlaceEntity? = null
 
     private val openGalleryLauncher: ActivityResultLauncher<Intent> = registerForActivityResult(ActivityResultContracts.StartActivityForResult()){
         result ->
@@ -87,6 +89,22 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
             onBackPressed()
         }
 
+        if(intent.hasExtra("happy_place_update")){
+            mHappyPlaceUpdate = intent.getSerializableExtra("happy_place_update") as HappyPlaceEntity
+        }
+        if(mHappyPlaceUpdate != null){
+            supportActionBar!!.title = "Edit Happy Place"
+            binding?.etTitle?.setText(mHappyPlaceUpdate!!.title)
+            binding?.etDescription?.setText(mHappyPlaceUpdate!!.description)
+            binding?.etDate?.setText(mHappyPlaceUpdate!!.date)
+            binding?.etLocation?.setText(mHappyPlaceUpdate!!.location)
+            mLatitude = mHappyPlaceUpdate!!.latitude
+            mLongitude = mHappyPlaceUpdate!!.longitude
+            saveImageToInternalStorage = Uri.parse(mHappyPlaceUpdate!!.image)
+            binding?.ivPlaceImage?.setImageURI(saveImageToInternalStorage)
+            binding?.btnSave?.text = "UPDATE"
+        }
+
         // Date dialog
         dateSetListener = DatePickerDialog.OnDateSetListener{ _, year, month, dayOfMonth ->
             cal.set(Calendar.YEAR, year)
@@ -104,7 +122,11 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
 
         // Button SAVE
         binding?.btnSave?.setOnClickListener{
-            addHappyPlace(happyPlaceDao)
+            if(mHappyPlaceUpdate == null) {
+                addHappyPlace(happyPlaceDao)
+            }else{
+                updateHappyPlace(mHappyPlaceUpdate!!.id, happyPlaceDao)
+            }
         }
 
     }
@@ -216,9 +238,28 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
         }
     }
 
+    private fun updateHappyPlace(id: Int, happyPlaceDao: HappyPlaceDao){
+        val title = binding?.etTitle?.text.toString()
+        val description = binding?.etDescription?.text.toString()
+        val location = binding?.etLocation?.text.toString()
+        val date = binding?.etDate?.text.toString()
+
+        if(title.isNotEmpty() && description.isNotEmpty() && location.isNotEmpty() && saveImageToInternalStorage != null){
+            lifecycleScope.launch {
+                happyPlaceDao.update(HappyPlaceEntity(id=id, title=title, description=description, location=location, image=saveImageToInternalStorage.toString(), date=date,
+                    latitude=mLatitude, longitude=mLongitude))
+                Toast.makeText(applicationContext, "Record updated", Toast.LENGTH_SHORT).show()
+                finish()
+            }
+        }else{
+            Toast.makeText(applicationContext, "Please, fill all the empty spaces", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         binding = null
+        mHappyPlaceUpdate = null
     }
 
 }

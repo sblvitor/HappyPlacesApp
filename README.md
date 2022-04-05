@@ -10,4 +10,7 @@
 
   - E utiliza RecyclerView para mostrar os dados armazenados, ou melhor, os Happy Places salvos.
 
-- Há o uso de uma outra third party library que é a CircleImageView, que permite mostrar a imagem salva em um formato circular, de uma maneira muito simples.
+- Há o uso de uma outra third party library que é a [CircleImageView](https://github.com/hdodenhof/CircleImageView), que permite mostrar a imagem salva em um formato circular, de uma maneira muito simples.
+
+- Para editar e deletar os Happy Places, foi implementado uma funcionalidade de deslizar para a esquerda o item que se deseja deletar ou editar, revelando dois botões para tais ações.
+  A biblioteca usada no projeto é a [SwipeRevealLayout](https://github.com/chthai64/SwipeRevealLayout)
